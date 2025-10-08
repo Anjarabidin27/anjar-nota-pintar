@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           username: username,
           is_approved: false // Set default approval status
         },
-        emailRedirectTo: `${window.location.origin}/waiting-approval`
+        emailRedirectTo: `${window.location.origin}/login`
       }
     });
     
@@ -131,6 +131,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email,
       password,
     });
+    
+    // After successful login, check approval status
+    if (!error && data.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_approved')
+        .eq('user_id', data.user.id)
+        .single();
+      
+      if (profile && !profile.is_approved) {
+        // Sign out immediately if not approved
+        await supabase.auth.signOut();
+        return { error: { message: 'Akun Anda masih menunggu persetujuan admin. Silakan tunggu konfirmasi.' } };
+      }
+    }
     
     return { error };
   };

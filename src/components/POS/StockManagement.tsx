@@ -39,7 +39,9 @@ export const StockManagement = ({
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category?.toLowerCase().includes(searchTerm.toLowerCase());
+      product.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.barcode?.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (showLowStockOnly) {
       // 2 lusin = 24 unit, 1 kodi = 20 unit - use higher threshold
@@ -248,18 +250,30 @@ export const StockManagement = ({
               {!isService(product) && !readOnly && (
                    <div className="mt-3 p-3 bg-muted/50 rounded border">
                      <div className="text-xs font-medium mb-2">Tambah Stok:</div>
-                    <div className="flex items-center gap-2">
+                     <div className="flex items-center gap-2">
                       <Input
                         type="number"
                         min="0"
-                        value={bulkStockInputs[product.id] === undefined ? '' : bulkStockInputs[product.id]}
+                        value={bulkStockInputs[product.id] || ''}
                         onChange={(e) => {
                           const value = e.target.value;
-                          const qty = value === '' ? 0 : parseInt(value);
-                          setBulkStockInputs(prev => ({
-                            ...prev,
-                            [product.id]: qty
-                          }));
+                          if (value === '') {
+                            setBulkStockInputs(prev => ({
+                              ...prev,
+                              [product.id]: 0
+                            }));
+                          } else {
+                            const qty = parseInt(value) || 0;
+                            setBulkStockInputs(prev => ({
+                              ...prev,
+                              [product.id]: qty
+                            }));
+                          }
+                        }}
+                        onFocus={(e) => {
+                          if (e.target.value === '0') {
+                            e.target.select();
+                          }
                         }}
                         className="h-8"
                         placeholder="0"
